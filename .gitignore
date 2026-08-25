@@ -1,0 +1,10 @@
+# Virtual environments
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Ignore large raw data (optional, but good practice if files are huge)
+# data/raw/*.csv
