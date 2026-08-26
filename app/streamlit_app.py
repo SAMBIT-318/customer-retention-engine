@@ -222,7 +222,20 @@ with tab4:
                 genai.configure(api_key=api_key)
                 
                 # Enforcing the fastest and most stable free model
-                ai_model = genai.GenerativeModel('gemini-1.5-flash-latest')
+                # Configure API key first (make sure this line is above if not already present)
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+
+# Automatically find and select a working model for your key
+supported_models = [
+    m.name for m in genai.list_models() 
+    if 'generateContent' in m.supported_generation_methods
+]
+
+if supported_models:
+    # Uses the first available model that supports text generation
+    model = genai.GenerativeModel(supported_models[0])
+else:
+    raise ValueError("No models supporting generateContent found for this API key.")
                 
                 prompt = f"""
                 You are a senior customer retention expert for a telecommunications company. 
