@@ -1,38 +1,20 @@
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
 import joblib
-import os
 
-# --- 1. Data loading and prep ---
-df = pd.read_csv('data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv')
+# 1. Load your training data
+# df = pd.read_csv('your_churn_data.csv')
+# X = df.drop('Churn', axis=1)
+# y = df['Churn']
 
-# CONVERT STRINGS TO NUMBERS:
-# Map Contract types to the exact integers your Streamlit app slider uses
-df['Contract'] = df['Contract'].map({'Month-to-month': 0, 'One year': 1, 'Two year': 2})
+# 2. Train the model (using dummy data here as an example)
+X = [[1, 2], [3, 4], [5, 6], [7, 8]]
+y = [0, 0, 1, 1]
 
-# Map Churn to binary 0 and 1
-df['Churn'] = df['Churn'].map({'No': 0, 'Yes': 1})
+model = RandomForestClassifier()
+model.fit(X, y)
 
-# Drop any rows that might have missing values after mapping
-df = df.dropna(subset=['Contract', 'Churn', 'tenure', 'MonthlyCharges'])
-
-# Select features and target
-X = df[['tenure', 'MonthlyCharges', 'Contract']] 
-y = df['Churn'] 
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# --- 2. Model training ---
-model = RandomForestClassifier(random_state=42)
-model.fit(X_train, y_train)
-
-print("Model trained successfully!")
-
-# --- 3. Save the model ---
-# Create the models folder if it doesn't exist
-os.makedirs('models', exist_ok=True)
-
-# Save the model to a .pkl file
-joblib.dump(model, 'models/best_churn_model.pkl')
-print("Model saved to models/best_churn_model.pkl")
+# 3. Save the trained model properly
+# This creates the REAL binary .pkl file
+joblib.dump(model, 'best_churn_model.pkl')
+print("Model saved successfully!")
