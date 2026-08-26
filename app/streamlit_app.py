@@ -222,7 +222,7 @@ with tab4:
                 genai.configure(api_key=api_key)
                 
                 # Enforcing the fastest and most stable free model
-                ai_model = genai.GenerativeModel("gemini-1.5-flash")
+                ai_model = genai.GenerativeModel('gemini-1.5-flash-latest')
                 
                 prompt = f"""
                 You are a senior customer retention expert for a telecommunications company. 
