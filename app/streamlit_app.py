@@ -24,7 +24,7 @@ def load_model():
 model = load_model()
 
 # ==========================================
-# SLEEK SIDEBAR (New Feature!)
+# SLEEK SIDEBAR 
 # ==========================================
 st.sidebar.markdown("## 👤 Customer Profiler")
 st.sidebar.info("Enter customer details here to predict their specific churn risk.")
@@ -75,7 +75,7 @@ with tab1:
             
             st.divider()
             
-            # EXPLAINABLE AI FEATURE (New!)
+            # EXPLAINABLE AI FEATURE 
             st.markdown("#### 🧠 Why did the AI make this prediction?")
             st.write("This chart shows which factors carried the most weight in the model's decision:")
             
@@ -124,13 +124,11 @@ with tab2:
 
     df = load_dashboard_data()
     
-    # KPI METRIC CARDS (New Feature!)
-    # Calculate business metrics
+    # KPI METRIC CARDS 
     total_customers = len(df)
     churn_count = len(df[df['Churn'] == 'Yes'])
     churn_rate = (churn_count / total_customers) * 100 if total_customers > 0 else 0
     
-    # Convert MonthlyCharges to numeric safely to calculate revenue at risk
     df['MonthlyCharges'] = pd.to_numeric(df['MonthlyCharges'], errors='coerce').fillna(0)
     revenue_at_risk = df[df['Churn'] == 'Yes']['MonthlyCharges'].sum()
 
@@ -178,13 +176,22 @@ with tab3:
                     else:
                         with st.spinner("Analyzing risk..."):
                             process_df = batch_df[required_cols].copy()
-                            if process_df['Contract'].dtype == 'O':
-                                process_df['Contract'] = process_df['Contract'].map({'Month-to-month': 0, 'One year': 1, 'Two year': 2})
-                            if process_df['TechSupport'].dtype == 'O':
-                                process_df['TechSupport'] = process_df['TechSupport'].map({'No': 0, 'Yes': 1, 'No internet service': 0})
                             
+                            # 1. Aggressively clean text (removes hidden spaces) and map to numbers
+                            process_df['Contract'] = process_df['Contract'].astype(str).str.strip()
+                            process_df['Contract'] = process_df['Contract'].map({'Month-to-month': 0, 'One year': 1, 'Two year': 2})
+                            
+                            process_df['TechSupport'] = process_df['TechSupport'].astype(str).str.strip()
+                            process_df['TechSupport'] = process_df['TechSupport'].map({'No': 0, 'Yes': 1, 'No internet service': 0})
+                            
+                            # 2. Force tenure and charges to be numbers
+                            process_df['tenure'] = pd.to_numeric(process_df['tenure'], errors='coerce')
+                            process_df['MonthlyCharges'] = pd.to_numeric(process_df['MonthlyCharges'], errors='coerce')
+                            
+                            # 3. Fill missing values to prevent model crashes
                             process_df = process_df.fillna(0)
                             
+                            # 4. Predict
                             predictions = model.predict(process_df)
                             probabilities = model.predict_proba(process_df)[:, 1]
                             
@@ -223,9 +230,9 @@ with tab4:
             api_key = st.secrets["GEMINI_API_KEY"]
             try:
                 genai.configure(api_key=api_key)
-                # Updated to the new working model name!
-                ai_model = genai.GenerativeModel("gemini-flash-latest")
                 
+                # Correct indentation & model perfectly aligned
+                ai_model = genai.GenerativeModel("gemini-flash-latest")
                 
                 prompt = f"""
                 You are a senior customer retention expert for a telecommunications company. 
