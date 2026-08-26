@@ -217,27 +217,19 @@ with tab4:
         if "GEMINI_API_KEY" not in st.secrets:
             st.error("⚠️ API Key not found! Please configure your Streamlit Secrets.")
         else:
-            api_key = st.secrets["GEMINI_API_KEY"]
-            try:
-                genai.configure(api_key=api_key)
-                
-                # Enforcing the fastest and most stable free model
-                # Configure API key first (make sure this line is above if not already present)
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-
-# Automatically find and select a working model for your key
-supported_models = [
-    m.name for m in genai.list_models() 
-    if 'generateContent' in m.supported_generation_methods
-]
-
-if supported_models:
-    # Uses the first available model that supports text generation
-    model = genai.GenerativeModel(supported_models[0])
-else:
-    raise ValueError("No models supporting generateContent found for this API key.")
-                
-                prompt = f"""
+            if st.button("✨ Generate Retention Plan"):
+    try:
+        genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+        
+        # Select the working Gemini model directly
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        
+        with st.spinner("AI Strategist is thinking..."):
+            response = model.generate_content(prompt)
+            st.markdown(response.text)
+            
+    except Exception as e:
+        st.error(f"Failed to connect to AI. Error: {e}")
                 You are a senior customer retention expert for a telecommunications company. 
                 A customer is currently at high risk of canceling their service. Here is their profile:
                 - Tenure with us: {ai_tenure} months
