@@ -10,7 +10,7 @@ customer-retention-engine/
 ├── app/
 │   └── streamlit_app.py          # Your main Streamlit script
 │
-├── models/
+├── model/
 │   └── best_churn_model.pkl      # Your exported model file (Must be uploaded!)
 │
 ├── data/
