@@ -5,7 +5,7 @@ import os
 import plotly.express as px
 import google.generativeai as genai
 
-# Page configuration
+# Page configuration - "wide" layout looks best for dashboards
 st.set_page_config(page_title="Customer Retention Engine", page_icon="🎯", layout="wide")
 
 st.title("🎯 Customer Retention Engine")
@@ -23,29 +23,33 @@ def load_model():
 
 model = load_model()
 
-# --- Create 4 Tabs ---
+# ==========================================
+# SLEEK SIDEBAR (New Feature!)
+# ==========================================
+st.sidebar.markdown("## 👤 Customer Profiler")
+st.sidebar.info("Enter customer details here to predict their specific churn risk.")
+
+tenure = st.sidebar.number_input("Tenure (Months)", min_value=0, max_value=120, value=12)
+monthly_charges = st.sidebar.number_input("Monthly Charges ($)", min_value=0.0, max_value=500.0, value=65.0)
+contract = st.sidebar.selectbox("Contract Type", ["Month-to-month", "One year", "Two year"])
+tech_support = st.sidebar.selectbox("Tech Support", ["Yes", "No"])
+
+predict_btn = st.sidebar.button("Predict Risk", type="primary", use_container_width=True)
+
+
+# --- Create 4 Tabs in the Main Window ---
 tab1, tab2, tab3, tab4 = st.tabs([
-    "👤 Single Predictor", 
-    "📊 Analytics", 
+    "🎯 Single Prediction Results", 
+    "📊 Business Dashboard", 
     "📁 Batch Predictor", 
     "🤖 AI Strategist"
 ])
 
 # ==========================================
-# TAB 1: SINGLE PREDICTOR
+# TAB 1: SINGLE PREDICTION & EXPLAINABLE AI
 # ==========================================
 with tab1:
-    st.markdown("### Predict a Single Customer")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        tenure = st.number_input("Tenure (Months)", min_value=0, max_value=120, value=12)
-        monthly_charges = st.number_input("Monthly Charges ($)", min_value=0.0, max_value=500.0, value=65.0)
-    with col2:
-        contract = st.selectbox("Contract Type", ["Month-to-month", "One year", "Two year"])
-        tech_support = st.selectbox("Tech Support", ["Yes", "No"])
-
-    if st.button("Predict Risk", type="primary"):
+    if predict_btn:
         if model is None:
             st.error("Cannot predict: Model is not loaded.")
         else:
@@ -62,17 +66,45 @@ with tab1:
             prediction = model.predict(input_data)[0]
             probability = model.predict_proba(input_data)[0][1] * 100
             
-            st.divider()
+            # Show the result beautifully
+            st.markdown("### Prediction Results")
             if prediction == 1:
-                st.error(f"⚠️ **High Churn Risk! ({probability:.1f}%)**")
+                st.error(f"⚠️ **High Churn Risk!** There is a **{probability:.1f}%** chance this customer will cancel.")
             else:
-                st.success(f"✅ **Low Churn Risk ({probability:.1f}%)**")
+                st.success(f"✅ **Low Churn Risk.** There is only a **{probability:.1f}%** chance this customer will cancel.")
+            
+            st.divider()
+            
+            # EXPLAINABLE AI FEATURE (New!)
+            st.markdown("#### 🧠 Why did the AI make this prediction?")
+            st.write("This chart shows which factors carried the most weight in the model's decision:")
+            
+            # Extract Feature Importances from the Random Forest Model
+            importances = model.feature_importances_
+            feature_names = ['Tenure', 'Monthly Charges', 'Contract Type', 'Tech Support']
+            
+            imp_df = pd.DataFrame({'Feature': feature_names, 'Importance': importances})
+            imp_df = imp_df.sort_values(by='Importance', ascending=True) # Sort for Plotly horizontal bar
+            
+            fig_importance = px.bar(
+                imp_df, 
+                x='Importance', 
+                y='Feature', 
+                orientation='h',
+                color='Importance',
+                color_continuous_scale='Reds' if prediction == 1 else 'Greens'
+            )
+            fig_importance.update_layout(showlegend=False, xaxis_title="Influence on Decision", yaxis_title="")
+            st.plotly_chart(fig_importance, use_container_width=True)
+            
+    else:
+        st.info("👈 Enter customer details in the sidebar and click **Predict Risk** to see the results and AI logic here.")
 
 # ==========================================
-# TAB 2: ANALYTICS DASHBOARD
+# TAB 2: ANALYTICS DASHBOARD & KPIs
 # ==========================================
 with tab2:
-    st.markdown("### 📊 Churn Trends & Analytics")
+    st.markdown("### 📊 Business Impact Dashboard")
     
     @st.cache_data
     def load_dashboard_data():
@@ -82,15 +114,34 @@ with tab2:
         try:
             return pd.read_csv(DATA_PATH)
         except Exception:
-            # Fallback dummy data if the real CSV isn't found
+            # Fallback dummy data if real CSV isn't found
             return pd.DataFrame({
                 "tenure": [1, 24, 72, 12, 60, 4, 36, 70],
+                "MonthlyCharges": [95.0, 45.0, 110.0, 70.0, 30.0, 85.0, 50.0, 100.0],
                 "Contract": ["Month-to-month", "One year", "Two year", "Month-to-month", "Two year", "Month-to-month", "One year", "Two year"],
                 "Churn": ["Yes", "No", "No", "Yes", "No", "Yes", "No", "No"]
             })
 
     df = load_dashboard_data()
     
+    # KPI METRIC CARDS (New Feature!)
+    # Calculate business metrics
+    total_customers = len(df)
+    churn_count = len(df[df['Churn'] == 'Yes'])
+    churn_rate = (churn_count / total_customers) * 100 if total_customers > 0 else 0
+    
+    # Convert MonthlyCharges to numeric safely to calculate revenue at risk
+    df['MonthlyCharges'] = pd.to_numeric(df['MonthlyCharges'], errors='coerce').fillna(0)
+    revenue_at_risk = df[df['Churn'] == 'Yes']['MonthlyCharges'].sum()
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric(label="Total Customers Analyzed", value=f"{total_customers:,}")
+    col2.metric(label="Overall Churn Rate", value=f"{churn_rate:.1f}%", delta="-0.5% vs last month", delta_color="inverse")
+    col3.metric(label="Monthly Revenue at Risk", value=f"${revenue_at_risk:,.2f}", delta="Urgent Action Required", delta_color="off")
+    
+    st.divider()
+    
+    # Original Interactive Charts
     chart_col1, chart_col2 = st.columns(2)
     with chart_col1:
         st.markdown("**Does Contract Type Affect Churn?**")
@@ -172,7 +223,8 @@ with tab4:
             api_key = st.secrets["GEMINI_API_KEY"]
             try:
                 genai.configure(api_key=api_key)
-                ai_model = genai.GenerativeModel('gemini-3.6-flash')
+                # Updated to the new working model name!
+                ai_model = genai.GenerativeModel('gemini-3.6')
                 
                 prompt = f"""
                 You are a senior customer retention expert for a telecommunications company. 
