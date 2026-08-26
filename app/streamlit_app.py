@@ -219,7 +219,7 @@ with tab4:
         else:
             try:
                 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-                ai_model = genai.GenerativeModel("gemini-2.0-flash")
+                ai_model = genai.GenerativeModel("gemini-3.6-flash")
                 
                 prompt = f"""
                 You are a senior customer retention expert for a telecommunications company. 
