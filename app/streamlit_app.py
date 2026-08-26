@@ -225,7 +225,6 @@ with tab4:
                 genai.configure(api_key=api_key)
                 # Updated to the new working model name!
                 ai_model = genai.GenerativeModel('gemini-1.5-flash')
-                 ai_model = genai.GenerativeModel('gemini-1.5-pro')
                 
                 
                 prompt = f"""
