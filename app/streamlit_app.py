@@ -4,8 +4,9 @@ import joblib
 import os
 import plotly.express as px
 import google.generativeai as genai
+import time
 
-# Page configuration - "wide" layout looks best for dashboards
+# Page configuration
 st.set_page_config(page_title="Customer Retention Engine", page_icon="🎯", layout="wide")
 
 st.title("🎯 Customer Retention Engine")
@@ -36,7 +37,6 @@ tech_support = st.sidebar.selectbox("Tech Support", ["Yes", "No"])
 
 predict_btn = st.sidebar.button("Predict Risk", type="primary", use_container_width=True)
 
-
 # --- Create 4 Tabs in the Main Window ---
 tab1, tab2, tab3, tab4 = st.tabs([
     "🎯 Single Prediction Results", 
@@ -66,7 +66,6 @@ with tab1:
             prediction = model.predict(input_data)[0]
             probability = model.predict_proba(input_data)[0][1] * 100
             
-            # Show the result beautifully
             st.markdown("### Prediction Results")
             if prediction == 1:
                 st.error(f"⚠️ **High Churn Risk!** There is a **{probability:.1f}%** chance this customer will cancel.")
@@ -75,16 +74,14 @@ with tab1:
             
             st.divider()
             
-            # EXPLAINABLE AI FEATURE 
             st.markdown("#### 🧠 Why did the AI make this prediction?")
             st.write("This chart shows which factors carried the most weight in the model's decision:")
             
-            # Extract Feature Importances from the Random Forest Model
             importances = model.feature_importances_
             feature_names = ['Tenure', 'Monthly Charges', 'Contract Type', 'Tech Support']
             
             imp_df = pd.DataFrame({'Feature': feature_names, 'Importance': importances})
-            imp_df = imp_df.sort_values(by='Importance', ascending=True) # Sort for Plotly horizontal bar
+            imp_df = imp_df.sort_values(by='Importance', ascending=True)
             
             fig_importance = px.bar(
                 imp_df, 
@@ -114,7 +111,6 @@ with tab2:
         try:
             return pd.read_csv(DATA_PATH)
         except Exception:
-            # Fallback dummy data if real CSV isn't found
             return pd.DataFrame({
                 "tenure": [1, 24, 72, 12, 60, 4, 36, 70],
                 "MonthlyCharges": [95.0, 45.0, 110.0, 70.0, 30.0, 85.0, 50.0, 100.0],
@@ -124,7 +120,6 @@ with tab2:
 
     df = load_dashboard_data()
     
-    # KPI METRIC CARDS 
     total_customers = len(df)
     churn_count = len(df[df['Churn'] == 'Yes'])
     churn_rate = (churn_count / total_customers) * 100 if total_customers > 0 else 0
@@ -139,7 +134,6 @@ with tab2:
     
     st.divider()
     
-    # Original Interactive Charts
     chart_col1, chart_col2 = st.columns(2)
     with chart_col1:
         st.markdown("**Does Contract Type Affect Churn?**")
@@ -177,21 +171,17 @@ with tab3:
                         with st.spinner("Analyzing risk..."):
                             process_df = batch_df[required_cols].copy()
                             
-                            # 1. Aggressively clean text (removes hidden spaces) and map to numbers
                             process_df['Contract'] = process_df['Contract'].astype(str).str.strip()
                             process_df['Contract'] = process_df['Contract'].map({'Month-to-month': 0, 'One year': 1, 'Two year': 2})
                             
                             process_df['TechSupport'] = process_df['TechSupport'].astype(str).str.strip()
                             process_df['TechSupport'] = process_df['TechSupport'].map({'No': 0, 'Yes': 1, 'No internet service': 0})
                             
-                            # 2. Force tenure and charges to be numbers
                             process_df['tenure'] = pd.to_numeric(process_df['tenure'], errors='coerce')
                             process_df['MonthlyCharges'] = pd.to_numeric(process_df['MonthlyCharges'], errors='coerce')
                             
-                            # 3. Fill missing values to prevent model crashes
                             process_df = process_df.fillna(0)
                             
-                            # 4. Predict
                             predictions = model.predict(process_df)
                             probabilities = model.predict_proba(process_df)[:, 1]
                             
@@ -208,7 +198,7 @@ with tab3:
             st.error(f"Error processing file: {e}")
 
 # ==========================================
-# TAB 4: AI RETENTION STRATEGIST 
+# TAB 4: AI RETENTION STRATEGIST (Free Tier Protected)
 # ==========================================
 with tab4:
     st.markdown("### 🤖 AI Retention Strategist")
@@ -231,8 +221,8 @@ with tab4:
             try:
                 genai.configure(api_key=api_key)
                 
-                # Correct indentation & model perfectly aligned
-                ai_model = genai.GenerativeModel("gemini-flash-latest")
+                # Enforcing the fastest and most stable free model
+                ai_model = genai.GenerativeModel("gemini-1.5-flash")
                 
                 prompt = f"""
                 You are a senior customer retention expert for a telecommunications company. 
@@ -255,8 +245,9 @@ with tab4:
                 st.markdown(response.text)
                 
             except Exception as e:
+                # FREE TIER FALLBACK: Catch quota errors politely so the app never crashes
                 error_msg = str(e)
                 if "429" in error_msg or "quota" in error_msg.lower():
-                    st.warning("⏳ The AI is currently handling too many requests. Please wait 60 seconds and click Generate again!")
+                    st.warning("⏳ **Free API Speed Limit Reached!** Google is currently processing too many requests. Please wait 60 seconds and click Generate again.")
                 else:
                     st.error(f"Failed to connect to AI. Error: {e}")
