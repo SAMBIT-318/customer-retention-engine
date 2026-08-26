@@ -1,5 +1,4 @@
-pandas>=2.1.1
 streamlit>=1.30.0
-mlflow>=2.10.0
-setuptools
-wheel
+pandas>=2.1.1
+scikit-learn>=1.3.0
+joblib>=1.3.2
