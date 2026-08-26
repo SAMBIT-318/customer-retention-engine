@@ -6,10 +6,21 @@ The Customer Retention Engine is a data science and machine learning project des
 ## 📂 Project Structure
 ```text
 customer-retention-engine/
-├── app/                # Application code (e.g., API, web interface, Streamlit)
+│
+├── app/
+│   └── streamlit_app.py          # Your main Streamlit script
+│
+├── models/
+│   └── best_churn_model.pkl      # Your exported model file (Must be uploaded!)
+│
 ├── data/
-│   └── raw/            # Raw data files used for model training and testing
-├── src/                # Source code for data processing, EDA, and model building
-├── Dockerfile          # Docker configuration for containerization
-├── README.md           # Project documentation
-└── requirements.txt    # Python dependencies
+│   └── raw/
+│       └── WA_Fn-UseC_-Telco-Customer-Churn.csv
+│
+├── src/
+│   ├── data_loader.py            # Renamed from data_loader.py.py
+│   └── train.py
+│
+├── .gitignore
+├── requirements.txt              # Lists all dependencies
+└── README.md
