@@ -22,7 +22,7 @@ def load_model():
     except Exception as e:
         return None
 
-model = load_model()
+ml_model = load_model()
 
 # ==========================================
 # SLEEK SIDEBAR 
@@ -35,7 +35,7 @@ monthly_charges = st.sidebar.number_input("Monthly Charges ($)", min_value=0.0, 
 contract = st.sidebar.selectbox("Contract Type", ["Month-to-month", "One year", "Two year"])
 tech_support = st.sidebar.selectbox("Tech Support", ["Yes", "No"])
 
-predict_btn = st.sidebar.button("Predict Risk", type="primary", use_container_width=True)
+predict_btn = st.sidebar.button("Predict Risk", type="primary", width="stretch")
 
 # --- Create 4 Tabs in the Main Window ---
 tab1, tab2, tab3, tab4 = st.tabs([
@@ -50,7 +50,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # ==========================================
 with tab1:
     if predict_btn:
-        if model is None:
+        if ml_model is None:
             st.error("Cannot predict: Model is not loaded.")
         else:
             contract_mapping = {"Month-to-month": 0, "One year": 1, "Two year": 2}
@@ -63,8 +63,8 @@ with tab1:
                 "TechSupport": [support_mapping[tech_support]]
             })
             
-            prediction = model.predict(input_data)[0]
-            probability = model.predict_proba(input_data)[0][1] * 100
+            prediction = ml_model.predict(input_data)[0]
+            probability = ml_model.predict_proba(input_data)[0][1] * 100
             
             st.markdown("### Prediction Results")
             if prediction == 1:
@@ -77,7 +77,7 @@ with tab1:
             st.markdown("#### 🧠 Why did the AI make this prediction?")
             st.write("This chart shows which factors carried the most weight in the model's decision:")
             
-            importances = model.feature_importances_
+            importances = ml_model.feature_importances_
             feature_names = ['Tenure', 'Monthly Charges', 'Contract Type', 'Tech Support']
             
             imp_df = pd.DataFrame({'Feature': feature_names, 'Importance': importances})
@@ -92,7 +92,7 @@ with tab1:
                 color_continuous_scale='Reds' if prediction == 1 else 'Greens'
             )
             fig_importance.update_layout(showlegend=False, xaxis_title="Influence on Decision", yaxis_title="")
-            st.plotly_chart(fig_importance, use_container_width=True)
+            st.plotly_chart(fig_importance, width="stretch")
             
     else:
         st.info("👈 Enter customer details in the sidebar and click **Predict Risk** to see the results and AI logic here.")
@@ -139,13 +139,13 @@ with tab2:
         st.markdown("**Does Contract Type Affect Churn?**")
         fig_contract = px.histogram(df, x="Contract", color="Churn", barmode="group",
                                     color_discrete_map={"Yes": "#ff4b4b", "No": "#00cc96"})
-        st.plotly_chart(fig_contract, use_container_width=True)
+        st.plotly_chart(fig_contract, width="stretch")
 
     with chart_col2:
         st.markdown("**When Do Customers Usually Leave?**")
         fig_tenure = px.box(df, x="Churn", y="tenure", color="Churn",
                             color_discrete_map={"Yes": "#ff4b4b", "No": "#00cc96"})
-        st.plotly_chart(fig_tenure, use_container_width=True)
+        st.plotly_chart(fig_tenure, width="stretch")
 
 # ==========================================
 # TAB 3: BATCH PREDICTOR
@@ -165,7 +165,7 @@ with tab3:
                 st.error(f"❌ Missing columns: {', '.join(missing_cols)}")
             else:
                 if st.button("🚀 Analyze All Customers", type="primary"):
-                    if model is None:
+                    if ml_model is None:
                         st.error("Model not loaded!")
                     else:
                         with st.spinner("Analyzing risk..."):
@@ -182,8 +182,8 @@ with tab3:
                             
                             process_df = process_df.fillna(0)
                             
-                            predictions = model.predict(process_df)
-                            probabilities = model.predict_proba(process_df)[:, 1]
+                            predictions = ml_model.predict(process_df)
+                            probabilities = ml_model.predict_proba(process_df)[:, 1]
                             
                             results_df = batch_df.copy()
                             results_df['Predicted_Churn'] = ['Yes (High Risk)' if p == 1 else 'No (Low Risk)' for p in predictions]
@@ -217,19 +217,11 @@ with tab4:
         if "GEMINI_API_KEY" not in st.secrets:
             st.error("⚠️ API Key not found! Please configure your Streamlit Secrets.")
         else:
-            if st.button("✨ Generate Retention Plan"):
-    try:
-        genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-        
-        # Select the working Gemini model directly
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        
-        with st.spinner("AI Strategist is thinking..."):
-            response = model.generate_content(prompt)
-            st.markdown(response.text)
-            
-    except Exception as e:
-        st.error(f"Failed to connect to AI. Error: {e}")
+            try:
+                genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+                ai_model = genai.GenerativeModel("gemini-2.0-flash")
+                
+                prompt = f"""
                 You are a senior customer retention expert for a telecommunications company. 
                 A customer is currently at high risk of canceling their service. Here is their profile:
                 - Tenure with us: {ai_tenure} months
@@ -250,7 +242,6 @@ with tab4:
                 st.markdown(response.text)
                 
             except Exception as e:
-                # FREE TIER FALLBACK: Catch quota errors politely so the app never crashes
                 error_msg = str(e)
                 if "429" in error_msg or "quota" in error_msg.lower():
                     st.warning("⏳ **Free API Speed Limit Reached!** Google is currently processing too many requests. Please wait 60 seconds and click Generate again.")
