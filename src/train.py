@@ -1,44 +1,37 @@
-# 1. FIX: Changed import since train.py and data_loader.py are in the same folder
-from data_loader import DataLoader 
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report
-import joblib
 import os
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+import joblib
 
-def main():
-    print("Starting training process...")
-    
-    # 1. Initialize and load
-    # This path assumes you are running the script from the root project folder
-    loader = DataLoader('data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv')
-    raw_df = loader.load_data()
-    
-    if raw_df is None:
-        print("Stopping execution because data failed to load.")
-        return
+# 1. Create a "model" folder if it doesn't exist
+os.makedirs("model", exist_ok=True)
 
-    # 2. Preprocess 
-    clean_df = loader.preprocess_data(raw_df)
+# 2. Create some sample training data
+# These features MUST match what you ask for in your Streamlit app
+data = {
+    'tenure': [1, 24, 72, 12, 60, 4, 36, 70],
+    'MonthlyCharges': [29.85, 56.95, 105.65, 42.30, 89.10, 74.40, 55.20, 110.50],
+    # Contract: 0 = Month-to-month, 1 = One year, 2 = Two year
+    'Contract': [0, 1, 2, 0, 2, 0, 1, 2],
+    # TechSupport: 0 = No, 1 = Yes
+    'TechSupport': [0, 1, 1, 0, 1, 0, 1, 1],
+    # Target variable: 0 = Stayed, 1 = Churned
+    'Churn': [1, 0, 0, 1, 0, 1, 0, 0] 
+}
 
-    # 3. Split
-    X_train, X_test, y_train, y_test = loader.get_train_test_split(clean_df, target_col='Churn')
+df = pd.DataFrame(data)
 
-    # 4. Train 
-    print("Training RandomForest model...")
-    model = RandomForestClassifier(random_state=42)
-    model.fit(X_train, y_train)
+# Separate features (X) and target (y)
+X = df.drop('Churn', axis=1)
+y = df['Churn']
 
-    # 5. Evaluate (NEW: So you know if your model is actually good!)
-    y_pred = model.predict(X_test)
-    acc = accuracy_score(y_test, y_pred)
-    print(f"Model Accuracy: {acc:.2%}")
-    print("\nClassification Report:\n", classification_report(y_test, y_pred))
+# 3. Train the machine learning model
+print("Training model...")
+model = RandomForestClassifier(random_state=42)
+model.fit(X, y)
 
-    # 6. Save
-    os.makedirs('models', exist_ok=True)
-    joblib.dump(model, 'models/best_churn_model.pkl')
-    print("\nModel saved successfully to 'models/best_churn_model.pkl'")
+# 4. Save the model to a .pkl file
+model_path = os.path.join("model", "best_churn_model.pkl")
+joblib.dump(model, model_path)
 
-# This ensures the code only runs if you execute this file directly
-if __name__ == "__main__":
-    main()
+print(f"✅ Success! Real model saved to: {model_path}")
