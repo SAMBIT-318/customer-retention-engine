@@ -4,23 +4,32 @@ from sklearn.model_selection import train_test_split
 import joblib
 import os
 
-# --- 1. Your existing data loading and prep code ---
+# --- 1. Data loading and prep ---
 df = pd.read_csv('data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv')
 
-# (Your code here that cleans the data and creates X and y)
-# Example features based on your Streamlit app:
-X = df[['tenure', 'MonthlyCharges', 'Contract']] # Make sure 'Contract' is properly encoded to 0, 1, 2
-y = df['Churn'] # Assuming 'Churn' is 1 (Yes) or 0 (No)
+# CONVERT STRINGS TO NUMBERS:
+# Map Contract types to the exact integers your Streamlit app slider uses
+df['Contract'] = df['Contract'].map({'Month-to-month': 0, 'One year': 1, 'Two year': 2})
+
+# Map Churn to binary 0 and 1
+df['Churn'] = df['Churn'].map({'No': 0, 'Yes': 1})
+
+# Drop any rows that might have missing values after mapping
+df = df.dropna(subset=['Contract', 'Churn', 'tenure', 'MonthlyCharges'])
+
+# Select features and target
+X = df[['tenure', 'MonthlyCharges', 'Contract']] 
+y = df['Churn'] 
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# --- 2. Your existing model training code ---
-model = RandomForestClassifier()
+# --- 2. Model training ---
+model = RandomForestClassifier(random_state=42)
 model.fit(X_train, y_train)
 
 print("Model trained successfully!")
 
-# --- 3. THE NEW CODE TO SAVE THE MODEL ---
+# --- 3. Save the model ---
 # Create the models folder if it doesn't exist
 os.makedirs('models', exist_ok=True)
 
