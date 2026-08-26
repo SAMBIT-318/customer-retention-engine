@@ -172,7 +172,7 @@ with tab4:
             api_key = st.secrets["GEMINI_API_KEY"]
             try:
                 genai.configure(api_key=api_key)
-                ai_model = genai.GenerativeModel('gemini-pro')
+                ai_model = genai.GenerativeModel('gemini-1.5-flash')
                 
                 prompt = f"""
                 You are a senior customer retention expert for a telecommunications company. 
