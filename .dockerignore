@@ -1,0 +1,15 @@
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Git folder
+.git/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore local Jupyter notebooks or temp files
+.ipynb_checkpoints/
