@@ -1,0 +1,29 @@
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+import joblib
+import os
+
+# --- 1. Your existing data loading and prep code ---
+df = pd.read_csv('data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv')
+
+# (Your code here that cleans the data and creates X and y)
+# Example features based on your Streamlit app:
+X = df[['tenure', 'MonthlyCharges', 'Contract']] # Make sure 'Contract' is properly encoded to 0, 1, 2
+y = df['Churn'] # Assuming 'Churn' is 1 (Yes) or 0 (No)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# --- 2. Your existing model training code ---
+model = RandomForestClassifier()
+model.fit(X_train, y_train)
+
+print("Model trained successfully!")
+
+# --- 3. THE NEW CODE TO SAVE THE MODEL ---
+# Create the models folder if it doesn't exist
+os.makedirs('models', exist_ok=True)
+
+# Save the model to a .pkl file
+joblib.dump(model, 'models/best_churn_model.pkl')
+print("Model saved to models/best_churn_model.pkl")
