@@ -22,14 +22,15 @@ class DataLoader:
 
         # Map strings to numbers to match your Streamlit app inputs
         df_clean['Contract'] = df_clean['Contract'].map({'Month-to-month': 0, 'One year': 1, 'Two year': 2})
+        df_clean['TechSupport'] = df_clean['TechSupport'].map({'No': 0, 'Yes': 1})
         df_clean['Churn'] = df_clean['Churn'].map({'No': 0, 'Yes': 1})
 
         # Drop rows with missing values in our target columns
-        df_clean = df_clean.dropna(subset=['Contract', 'Churn', 'tenure', 'MonthlyCharges'])
+        df_clean = df_clean.dropna(subset=['Contract', 'TechSupport', 'Churn', 'tenure', 'MonthlyCharges'])
 
-        # Optional but recommended: Filter down to ONLY the features your Streamlit app uses
+        # Filter down to ONLY the features your Streamlit app uses
         # This prevents shape mismatch errors during prediction
-        df_clean = df_clean[['tenure', 'MonthlyCharges', 'Contract', 'Churn']]
+        df_clean = df_clean[['tenure', 'MonthlyCharges', 'Contract', 'TechSupport', 'Churn']]
         
         return df_clean
 
