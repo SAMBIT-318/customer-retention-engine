@@ -5,7 +5,8 @@ import pandas as pd
 # Load the trained model
 @st.cache_resource
 def load_model():
-    # Update path depending on where you run the script from
+    # Streamlit Cloud executes from the root of your GitHub repository.
+    # This path assumes you created a 'models' folder at the root containing your .pkl file.
     return joblib.load('models/best_churn_model.pkl')
 
 st.title("🎯 Customer Retention Engine")
