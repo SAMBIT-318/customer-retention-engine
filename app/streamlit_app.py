@@ -255,4 +255,8 @@ with tab4:
                 st.markdown(response.text)
                 
             except Exception as e:
-                st.error(f"Failed to connect to AI. Error: {e}")
+                error_msg = str(e)
+                if "429" in error_msg or "quota" in error_msg.lower():
+                    st.warning("⏳ The AI is currently handling too many requests. Please wait 60 seconds and click Generate again!")
+                else:
+                    st.error(f"Failed to connect to AI. Error: {e}")
