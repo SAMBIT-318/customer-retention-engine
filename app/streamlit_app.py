@@ -7,7 +7,7 @@ import pandas as pd
 def load_model():
     # Updated path to exactly match your GitHub repository structure:
     # Folder is 'model' (singular) and file has the '.txt' extension
-    return joblib.load('model/best_churn_model.pkl.txt')
+    return joblib.load('model/best_churn_model.pkl')
 
 st.title("🎯 Customer Retention Engine")
 st.write("Predict customer churn risk in real-time.")
