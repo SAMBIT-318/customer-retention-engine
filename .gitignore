@@ -1,10 +1,26 @@
 # Virtual environments
 venv/
 env/
+.venv/
 
 # Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Security & Secrets (CRITICAL)
+.env
+.streamlit/secrets.toml
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebook checkpoints (Common in ML projects)
+.ipynb_checkpoints/
 
 # Ignore large raw data (optional, but good practice if files are huge)
 # data/raw/*.csv
